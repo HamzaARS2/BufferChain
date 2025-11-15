@@ -36,6 +36,11 @@ public class BufferChain {
         append(bytes, bytesFilled, len); // bytesFilled works here as the starting byte
     }
 
+    public BufferCursor tail() {
+        int chunkSize = chunks.get(current).getSize();
+        int lastBytePos = chunkSize == 0 ? 0: chunkSize - 1;
+        return new BufferCursor(this, current, lastBytePos);
+    }
 
     public Optional<BufferChunk> getChunk(int index) {
         if (index >= chunksCount)
