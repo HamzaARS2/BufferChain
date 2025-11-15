@@ -3,6 +3,7 @@ package com.helarras.bufferchain;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 public class BufferChain {
     private List<BufferChunk> chunks;
@@ -35,12 +36,13 @@ public class BufferChain {
         append(bytes, bytesFilled, len); // bytesFilled works here as the starting byte
     }
 
-    public void search(byte ...bytes) {
 
-    }
-
-    public BufferChunk getChunk(int index) {
-        return chunks.get(index);
+    public Optional<BufferChunk> getChunk(int index) {
+        if (index >= chunksCount)
+            throw new IndexOutOfBoundsException();
+        if (index >= chunks.size())
+            return Optional.empty();
+        return Optional.of(chunks.get(index));
     }
 
     public int getChunkCapacity() {
