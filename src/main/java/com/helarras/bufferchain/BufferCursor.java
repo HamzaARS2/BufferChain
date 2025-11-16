@@ -3,9 +3,9 @@ package com.helarras.bufferchain;
 import java.util.Optional;
 
 public class BufferCursor {
-    int chunkPos;
-    int offset;
-    BufferChain chain;
+    private int chunkPos;
+    private int offset;
+    private BufferChain chain;
 
     public BufferCursor(BufferChain chain) {
         this(chain, 0, 0);
@@ -46,14 +46,16 @@ public class BufferCursor {
     }
 
 
-    public void advance() {
-    }
     public void advance(int n) { // 3
-        int newPos = position() + n;
-        int chunkPos = (newPos + 1 / chain.getChunksCount()) - 1; // 2
-        int offset = (newPos + 1 % chain.getChunkCapacity()); // 1
+        if (n < 0) throw new IllegalArgumentException("Negative advance not allowed");
+        BufferCursor cursor = chain.tail();
 
+        int newPos = Math.min(position() + n, cursor.position());
+        this.chunkPos = newPos / chain.getChunkCapacity();
+        this.offset = newPos % chain.getChunkCapacity();
     }
+
+
 
     public int position() {
         return chain.getChunkCapacity() * chunkPos + offset;
