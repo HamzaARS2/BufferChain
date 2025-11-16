@@ -1,7 +1,5 @@
 package com.helarras.bufferchain;
 
-import java.util.Arrays;
-
 public class BufferChunk {
     private final byte [] chunk;
     private int cursor;
@@ -20,6 +18,12 @@ public class BufferChunk {
 
     public byte [] getBytes() {
         return chunk.clone();
+    }
+
+    public byte get(int index) throws IndexOutOfBoundsException {
+        if (index >= chunk.length)
+            throw new IndexOutOfBoundsException("Chunk length is: " + chunk.length + " but the index is: " + index);
+        return chunk[index];
     }
 
     public boolean hasSpace() {
