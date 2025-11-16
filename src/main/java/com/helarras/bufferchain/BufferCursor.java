@@ -48,13 +48,15 @@ public class BufferCursor {
     }
 
 
-    public void advance(int n) { // 3
+    public int advance(int n) { // 3
         if (n < 0) throw new IllegalArgumentException("Negative advance not allowed");
-        BufferCursor cursor = chain.tail();
+        BufferCursor tail = chain.tail();
 
-        int newPos = Math.min(position() + n, cursor.position());
+        int oldPos = position();
+        int newPos = Math.min(oldPos + n, tail.position());
         this.chunkPos = newPos / chain.getChunkCapacity();
         this.offset = newPos % chain.getChunkCapacity();
+        return newPos - oldPos;
     }
 
 
