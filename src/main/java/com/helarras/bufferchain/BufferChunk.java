@@ -21,8 +21,8 @@ public class BufferChunk {
     }
 
     public byte get(int index) throws IndexOutOfBoundsException {
-        if (index >= chunk.length)
-            throw new IndexOutOfBoundsException("Chunk length is: " + chunk.length + " but the index is: " + index);
+        if (index >= chunk.length || index < 0)
+            throw new IndexOutOfBoundsException("Chunk length is [" + chunk.length + "] but the index was [" + index + "]");
         return chunk[index];
     }
 
