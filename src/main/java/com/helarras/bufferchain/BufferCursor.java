@@ -36,15 +36,15 @@ public class BufferCursor {
             && nextOffset < oChunk.get().getSize();
     }
 
-    public byte next() {
-        if (!hasNext()) return peek();
+    public boolean next() {
+        if (!hasNext()) return false;
         if (offset + 1 < chain.getChunkCapacity())
             ++offset;
         else {
             offset = 0;
             ++chunkPos;
         }
-        return peek();
+        return true;
     }
 
 
