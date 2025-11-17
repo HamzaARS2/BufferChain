@@ -39,6 +39,14 @@ public class BufferChain {
         append(bytes, bytesFilled, len); // bytesFilled works here as the starting byte
     }
 
+    public BufferCursor cursor() {
+        return new BufferCursor(this);
+    }
+
+    public BufferCursor cursorAt(int position) {
+        return new BufferCursor(this, position);
+    }
+
     public BufferCursor tail() {
         int chunkSize = chunks.get(current).getSize();
         int lastBytePos = chunkSize == 0 ? 0: chunkSize - 1;
@@ -55,6 +63,10 @@ public class BufferChain {
 
     public boolean isEmpty() {
         return current == 0 && chunks.get(current).empty();
+    }
+
+    public int getSize() {
+        return (current * chunkCapacity) + chunks.get(current).getSize();
     }
 
     public int getChunkCapacity() {

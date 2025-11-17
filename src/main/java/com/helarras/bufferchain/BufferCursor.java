@@ -11,6 +11,15 @@ public class BufferCursor {
         this(chain, 0, 0);
     }
 
+    public BufferCursor(BufferChain chain, int position) {
+        this(chain, position / chain.getChunkCapacity(), position % chain.getChunkCapacity());
+        if (position >= chain.getSize())
+            throw new IllegalArgumentException("Position " + position + " exceeds buffer chain size " + chain.getSize());
+        if (position < 0)
+            throw new IllegalArgumentException("Position cannot be negative: " + position);
+
+    }
+
     public BufferCursor(BufferChain chain, int chunkPos, int offset) {
         this.chunkPos = chunkPos;
         this.offset = offset;
