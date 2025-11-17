@@ -18,6 +18,8 @@ public class BufferCursor {
     }
 
     public byte peek() {
+        if (chain.isEmpty())
+            throw new RuntimeException("BufferChain is empty");
         return chain.getChunk(chunkPos).orElseThrow().get(offset);
     }
 

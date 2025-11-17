@@ -2,17 +2,17 @@ package com.helarras.bufferchain;
 
 public class BufferChunk {
     private final byte [] chunk;
-    private int cursor;
+    private int writePos;
 
     public BufferChunk(int capacity) {
-        this.cursor = 0;
+        this.writePos = 0;
         this.chunk = new byte[capacity];
     }
 
     public int fill(byte [] bytes, int start,  int len) {
         int i = start;
-        while (i < len && cursor < chunk.length)
-            chunk[cursor++] = bytes[i++];
+        while (i < len && writePos < chunk.length)
+            chunk[writePos++] = bytes[i++];
         return i;
     }
 
@@ -27,11 +27,15 @@ public class BufferChunk {
     }
 
     public boolean hasSpace() {
-        return chunk.length > cursor;
+        return chunk.length > writePos;
     }
 
     public int getSize() {
-        return cursor;
+        return writePos;
+    }
+
+    public boolean empty() {
+        return writePos == 0;
     }
 
 }

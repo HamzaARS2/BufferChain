@@ -50,6 +50,10 @@ public class BufferChain {
         return Optional.of(chunks.get(index));
     }
 
+    public boolean isEmpty() {
+        return current == 0 && chunks.get(current).empty();
+    }
+
     public int getChunkCapacity() {
         return chunkCapacity;
     }
