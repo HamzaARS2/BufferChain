@@ -5,7 +5,7 @@ import java.util.Optional;
 public class BufferCursor {
     private int chunkPos;
     private int offset;
-    private BufferChain chain;
+    private final BufferChain chain;
 
     public BufferCursor(BufferChain chain) {
         this(chain, 0, 0);

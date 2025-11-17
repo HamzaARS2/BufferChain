@@ -29,6 +29,9 @@ public class BufferChain {
     }
 
     public void append(byte [] bytes, int start, int len) throws IOException {
+        if (len - start > bytes.length)
+            throw new IllegalArgumentException("Cannot append: requested length goes beyond the end of the array. " + "len=" + len + ", start=" + start + ", array length=" + bytes.length);
+
         BufferChunk currentChunk = chunks.get(current);
         int bytesFilled = currentChunk.fill(bytes, start, len);
         if (bytesFilled == len) return;
