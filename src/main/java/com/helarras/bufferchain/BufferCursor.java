@@ -47,6 +47,12 @@ public class BufferCursor {
             && nextOffset < oChunk.get().getSize();
     }
 
+    /**
+     *  Advances the cursor to the next available byte in the buffer chain
+     * @return true if the cursor was successfully moved to the next byte,
+     * false if the end of the buffer chain was already reached.
+     */
+
     public boolean next() {
         if (!hasNext()) return false;
         if (offset + 1 < chain.getChunkCapacity())
@@ -70,6 +76,16 @@ public class BufferCursor {
         return newPos - oldPos;
     }
 
+    public int rewind(int n) {
+        if (n < 0) throw new IllegalArgumentException("Negative rewind not allowed");
+        BufferCursor head = chain.cursor();
+
+        int oldPos = position();
+        int newPos = Math.max(oldPos - n, head.position());
+        this.chunkPos = newPos / chain.getChunkCapacity();
+        this.offset = newPos % chain.getChunkCapacity();
+        return oldPos - newPos;
+    }
 
 
     public int position() {
