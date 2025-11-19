@@ -1,39 +1,38 @@
 package com.helarras.bufferchain;
 
-import javax.swing.text.html.Option;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 public class BufferChain {
-    private List<BufferChunk> chunks;
-    private int current;
+    private final List<BufferChunk> chunks;
+    private int writeChunk;
     private final int chunkCapacity;
     private final int chunksCount;
-    private final boolean lazyInit = true;
 
-    public BufferChain(int chunkCapacity, int chunksCount) {
-        this.current = 0;
+    public BufferChain(int chunkCapacity, int extraChunksCount) {
+        this.writeChunk = 0;
         this.chunkCapacity = chunkCapacity;
-        this.chunksCount = chunksCount;
+        this.chunksCount = extraChunksCount + 1;
         this.chunks = new ArrayList<>();
         chunks.add(new BufferChunk(chunkCapacity));
     }
 
     private void advance() throws IOException {
-        ++current;
-        if (current >= chunksCount)
+        ++writeChunk;
+        if (writeChunk >= chunksCount)
             throw new IOException("Buffer chain over flow");
-        if (lazyInit)
-            chunks.add(new BufferChunk(chunkCapacity));
+        chunks.add(new BufferChunk(chunkCapacity));
     }
 
     public void append(byte [] bytes, int start, int len) throws IOException {
+        if (start < 0 || len < start)
+            throw new IllegalArgumentException("Cannot append: start must be non-negative and length must not be less than start");
         if (len - start > bytes.length)
             throw new IllegalArgumentException("Cannot append: requested length goes beyond the end of the array. " + "len=" + len + ", start=" + start + ", array length=" + bytes.length);
 
-        BufferChunk currentChunk = chunks.get(current);
+        BufferChunk currentChunk = chunks.get(writeChunk);
         int bytesFilled = currentChunk.fill(bytes, start, len);
         if (bytesFilled == len) return;
         advance(); // advances to the next chunk if possible
@@ -60,7 +59,7 @@ public class BufferChain {
         return Optional.of(cursor);
     }
 
-    public BufferCursor cursor() {
+    public BufferCursor head() {
         return new BufferCursor(this);
     }
 
@@ -69,9 +68,9 @@ public class BufferChain {
     }
 
     public BufferCursor tail() {
-        int chunkSize = chunks.get(current).getSize();
+        int chunkSize = chunks.get(writeChunk).getSize();
         int lastBytePos = chunkSize == 0 ? 0: chunkSize - 1;
-        return new BufferCursor(this, current, lastBytePos);
+        return new BufferCursor(this, writeChunk, lastBytePos);
     }
 
     public Optional<BufferChunk> getChunk(int index) {
@@ -83,11 +82,11 @@ public class BufferChain {
     }
 
     public boolean isEmpty() {
-        return current == 0 && chunks.get(current).empty();
+        return writeChunk == 0 && chunks.get(writeChunk).empty();
     }
 
     public int getSize() {
-        return (current * chunkCapacity) + chunks.get(current).getSize();
+        return (writeChunk * chunkCapacity) + chunks.get(writeChunk).getSize();
     }
 
     public int getChunkCapacity() {
@@ -98,19 +97,6 @@ public class BufferChain {
         return chunksCount;
     }
 
-    public void debugPrint() {
-        System.out.println("BufferChain debug: total chunks = " + chunks.size());
-        for (int i = 0; i < chunks.size(); i++) {
-            BufferChunk chunk = chunks.get(i);
-            System.out.print("Chunk " + i + " [filled=" + chunk.getSize() + "]: ");
-            byte[] data = chunk.getBytes();
-            for (int j = 0; j < chunk.getSize(); j++) {
-                // print as hex for clarity
-                System.out.print(String.format("%02X ", data[j]));
-            }
-            System.out.println();
-        }
-    }
 
 
 }

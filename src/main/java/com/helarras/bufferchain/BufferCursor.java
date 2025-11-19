@@ -78,7 +78,7 @@ public class BufferCursor {
 
     public int rewind(int n) {
         if (n < 0) throw new IllegalArgumentException("Negative rewind not allowed");
-        BufferCursor head = chain.cursor();
+        BufferCursor head = chain.head();
 
         int oldPos = position();
         int newPos = Math.max(oldPos - n, head.position());
