@@ -1,5 +1,6 @@
 package com.helarras.bufferchain;
 
+import javax.swing.text.html.Option;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -37,6 +38,26 @@ public class BufferChain {
         if (bytesFilled == len) return;
         advance(); // advances to the next chunk if possible
         append(bytes, bytesFilled, len); // bytesFilled works here as the starting byte
+    }
+
+    public Optional<BufferCursor> find(byte[] pattern) {
+        if (pattern.length == 0)
+            return Optional.empty();
+        BufferCursor cursor = new BufferCursor(this);
+        int matched = 0;
+        do {
+            byte current = cursor.peek();
+            if (current == pattern[matched]) ++matched;
+            else {
+                matched = 0;
+                if (current == pattern[matched])
+                    ++matched;
+            }
+        } while (matched < pattern.length && cursor.next());
+        if (matched != pattern.length)
+            return Optional.empty();
+        cursor.rewind(matched - 1);
+        return Optional.of(cursor);
     }
 
     public BufferCursor cursor() {
