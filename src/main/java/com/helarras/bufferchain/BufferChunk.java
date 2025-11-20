@@ -1,7 +1,7 @@
 package com.helarras.bufferchain;
 
 public class BufferChunk {
-    private final byte [] chunk;
+    private final byte[] chunk;
     private int writePos;
 
     public BufferChunk(int capacity) {
@@ -9,14 +9,26 @@ public class BufferChunk {
         this.chunk = new byte[capacity];
     }
 
-    public int fill(byte [] bytes, int start,  int len) {
-        int i = start;
-        while (i < len && writePos < chunk.length)
-            chunk[writePos++] = bytes[i++];
-        return i;
+    /**
+     * Writes bytes into this chunk from a source array.
+     *
+     * @param bytes  The source byte array.
+     * @param start  The starting index in the source array.
+     * @param length The number of bytes to attempt to write.
+     * @return The number of bytes actually written. This may be less than length
+     * if the chunk runs out of space.
+     */
+    public int write(byte[] bytes, int start, int length) {
+        int available = chunk.length - writePos;
+        int toCopy = Math.min(length, available);
+        System.arraycopy(bytes, start, chunk, writePos, toCopy);
+
+        writePos += toCopy;
+        return toCopy;
     }
 
-    public byte [] getBytes() {
+
+    public byte[] getBytes() {
         return chunk.clone();
     }
 
