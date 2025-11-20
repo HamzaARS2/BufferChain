@@ -17,6 +17,12 @@ public class BufferChain {
     private final int chunkCapacity;
     private final int chunksCount;
 
+    /**
+     * Initializes a new BufferChain.
+     *
+     * @param chunkCapacity    The size (in bytes) of each individual chunk.
+     * @param extraChunksCount The maximum number of additional chunks allowed.
+     */
     public BufferChain(int chunkCapacity, int extraChunksCount) {
         this.writeChunk = 0;
         this.chunkCapacity = chunkCapacity;
@@ -33,13 +39,15 @@ public class BufferChain {
     }
 
     /**
-     * Appends a segment of a byte array to the buffer chain.
-     * Automatically allocates new chunks if the current one fills up.
+     * Appends data to the buffer chain.
+     * Automatically handles chunk boundaries by filling the current chunk
+     * and creating new ones if necessary.
      *
-     * @param bytes The source byte array.
-     * @param start The starting index in the source array.
-     * @param length   The ending index (exclusive limit) in the source array.
-     * @throws IOException If the chain exceeds the maximum defined chunk count.
+     * @param bytes  The source byte array.
+     * @param start  The starting index in the source array.
+     * @param length The number of bytes to append.
+     * @throws IOException               If the buffer runs out of chunks (Overflow).
+     * @throws IndexOutOfBoundsException If the start/length parameters are invalid.
      */
     public void append(byte[] bytes, int start, int length) throws IOException {
         if (start < 0 || length < 0 || start + length > bytes.length)
@@ -48,8 +56,8 @@ public class BufferChain {
         BufferChunk currentChunk = chunks.get(writeChunk);
         int written = currentChunk.write(bytes, start, length);
         if (written == length) return;
-        advance(); // advances to the next chunk if possible
-        append(bytes, start + written, length - written); // written works here as the starting byte
+        advance();
+        append(bytes, start + written, length - written);
     }
 
     /**
@@ -87,9 +95,10 @@ public class BufferChain {
     }
 
     /**
-     * Creates a cursor positioned at a specific position of the chain.
+     * Creates a cursor at a specific absolute position.
      *
-     * @param position that the cursor should point to.
+     * @param position The absolute byte index to position the cursor at.
+     * @return A new BufferCursor.
      */
     public BufferCursor cursorAt(int position) {
         return new BufferCursor(this, position);
@@ -104,6 +113,12 @@ public class BufferChain {
         return new BufferCursor(this, writeChunk, lastBytePos);
     }
 
+    /**
+     * Retrieves a specific chunk by index.
+     *
+     * @param index The chunk index.
+     * @return An Optional containing the chunk, or empty if it doesn't exist yet.
+     */
     public Optional<BufferChunk> getChunk(int index) {
         if (index >= chunksCount)
             throw new IndexOutOfBoundsException();
@@ -112,10 +127,18 @@ public class BufferChain {
         return Optional.of(chunks.get(index));
     }
 
+    /**
+     * @return true if the buffer contains no data.
+     */
     public boolean isEmpty() {
         return writeChunk == 0 && chunks.get(writeChunk).empty();
     }
 
+    /**
+     * Calculates the total number of bytes stored in the entire chain.
+     *
+     * @return Total size in bytes.
+     */
     public int getSize() {
         return (writeChunk * chunkCapacity) + chunks.get(writeChunk).getSize();
     }
