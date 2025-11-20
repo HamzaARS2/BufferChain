@@ -5,6 +5,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * A dynamic buffer implementation that manages data in linked chunks.
+ * This avoids large contiguous memory allocation and allows for efficient
+ * growing of the buffer.
+ */
+
 public class BufferChain {
     private final List<BufferChunk> chunks;
     private int writeChunk;
@@ -26,19 +32,33 @@ public class BufferChain {
         chunks.add(new BufferChunk(chunkCapacity));
     }
 
-    public void append(byte [] bytes, int start, int len) throws IOException {
-        if (start < 0 || len < start)
-            throw new IllegalArgumentException("Cannot append: start must be non-negative and length must not be less than start");
-        if (len - start > bytes.length)
-            throw new IllegalArgumentException("Cannot append: requested length goes beyond the end of the array. " + "len=" + len + ", start=" + start + ", array length=" + bytes.length);
+    /**
+     * Appends a segment of a byte array to the buffer chain.
+     * Automatically allocates new chunks if the current one fills up.
+     *
+     * @param bytes The source byte array.
+     * @param start The starting index in the source array.
+     * @param length   The ending index (exclusive limit) in the source array.
+     * @throws IOException If the chain exceeds the maximum defined chunk count.
+     */
+    public void append(byte[] bytes, int start, int length) throws IOException {
+        if (start < 0 || length < 0 || start + length > bytes.length)
+            throw new IndexOutOfBoundsException("Range [" + start + ", " + (start + length) + ") out of bounds for length " + bytes.length);
 
         BufferChunk currentChunk = chunks.get(writeChunk);
-        int bytesFilled = currentChunk.fill(bytes, start, len);
-        if (bytesFilled == len) return;
+        int written = currentChunk.write(bytes, start, length);
+        if (written == length) return;
         advance(); // advances to the next chunk if possible
-        append(bytes, bytesFilled, len); // bytesFilled works here as the starting byte
+        append(bytes, start + written, length - written); // written works here as the starting byte
     }
 
+    /**
+     * Searches for a specific byte pattern within the buffer chain.
+     *
+     * @param pattern The byte array pattern to search for.
+     * @return An Optional containing a BufferCursor positioned at the start
+     * of the found pattern, or empty if not found.
+     */
     public Optional<BufferCursor> find(byte[] pattern) {
         if (pattern.length == 0)
             return Optional.empty();
@@ -59,17 +79,28 @@ public class BufferChain {
         return Optional.of(cursor);
     }
 
+    /**
+     * Creates a cursor positioned at the very beginning of the chain.
+     */
     public BufferCursor head() {
         return new BufferCursor(this);
     }
 
+    /**
+     * Creates a cursor positioned at a specific position of the chain.
+     *
+     * @param position that the cursor should point to.
+     */
     public BufferCursor cursorAt(int position) {
         return new BufferCursor(this, position);
     }
 
+    /**
+     * Creates a cursor positioned at the last byte of the chain.
+     */
     public BufferCursor tail() {
         int chunkSize = chunks.get(writeChunk).getSize();
-        int lastBytePos = chunkSize == 0 ? 0: chunkSize - 1;
+        int lastBytePos = chunkSize == 0 ? 0 : chunkSize - 1;
         return new BufferCursor(this, writeChunk, lastBytePos);
     }
 
@@ -96,7 +127,6 @@ public class BufferChain {
     public int getChunksCount() {
         return chunksCount;
     }
-
 
 
 }
