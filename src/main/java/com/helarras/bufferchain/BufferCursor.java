@@ -64,10 +64,10 @@ public class BufferCursor {
         int nextPos = position() + 1;
         int nextChunkPos = nextPos / chain.getChunkCapacity();
         int nextOffset = nextPos % chain.getChunkCapacity();
-        if (nextChunkPos >= chain.getChunksCount())
+        if (nextChunkPos >= chain.getMaxChunks())
             return false; // In case nextChunkPost exceeded the chain chunks count
         Optional<BufferChunk> oChunk = chain.getChunk(nextChunkPos);
-        return nextChunkPos < chain.getChunksCount() && oChunk.isPresent()
+        return nextChunkPos < chain.getMaxChunks() && oChunk.isPresent()
                 && nextOffset < oChunk.get().getSize();
     }
 

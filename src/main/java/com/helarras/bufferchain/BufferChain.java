@@ -15,26 +15,28 @@ public class BufferChain {
     private final List<BufferChunk> chunks;
     private int writeChunk;
     private final int chunkCapacity;
-    private final int chunksCount;
+    private final int maxChunks;
 
     /**
      * Initializes a new BufferChain.
      *
      * @param chunkCapacity    The size (in bytes) of each individual chunk.
-     * @param extraChunksCount The maximum number of additional chunks allowed.
+     * @param maxChunks  The total number of chunks allowed (must be >= 1).
+     * @throws IllegalArgumentException if the maxChunks is less than 1.
      */
-    public BufferChain(int chunkCapacity, int extraChunksCount) {
+    public BufferChain(int chunkCapacity, int maxChunks) {
+        if (maxChunks < 1) throw new IllegalArgumentException("maxChunks must be at least 1");
         this.writeChunk = 0;
         this.chunkCapacity = chunkCapacity;
-        this.chunksCount = extraChunksCount + 1;
+        this.maxChunks = maxChunks;
         this.chunks = new ArrayList<>();
         chunks.add(new BufferChunk(chunkCapacity));
     }
 
     private void advance() throws IOException {
         ++writeChunk;
-        if (writeChunk >= chunksCount)
-            throw new IOException("Buffer chain over flow");
+        if (writeChunk >= maxChunks)
+            throw new IOException("Buffer chain over flow: Max chunks (" + maxChunks + ") reached.");
         chunks.add(new BufferChunk(chunkCapacity));
     }
 
@@ -120,7 +122,7 @@ public class BufferChain {
      * @return An Optional containing the chunk, or empty if it doesn't exist yet.
      */
     public Optional<BufferChunk> getChunk(int index) {
-        if (index >= chunksCount)
+        if (index >= maxChunks)
             throw new IndexOutOfBoundsException();
         if (index >= chunks.size())
             return Optional.empty();
@@ -147,8 +149,8 @@ public class BufferChain {
         return chunkCapacity;
     }
 
-    public int getChunksCount() {
-        return chunksCount;
+    public int getMaxChunks() {
+        return maxChunks;
     }
 
 
