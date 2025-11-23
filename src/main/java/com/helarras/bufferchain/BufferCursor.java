@@ -10,6 +10,7 @@ import java.util.Optional;
 public class BufferCursor {
     private int chunkPos;
     private int offset;
+    private int position;
     private final BufferChain chain;
 
     /**
@@ -40,6 +41,7 @@ public class BufferCursor {
         this.chunkPos = chunkPos;
         this.offset = offset;
         this.chain = chain;
+        this.position = chain.getChunkCapacity() * chunkPos + offset;
     }
 
     /**
@@ -85,6 +87,7 @@ public class BufferCursor {
             offset = 0;
             ++chunkPos;
         }
+        ++position;
         return true;
     }
 
@@ -103,6 +106,7 @@ public class BufferCursor {
         int newPos = Math.min(oldPos + n, tail.position());
         this.chunkPos = newPos / chain.getChunkCapacity();
         this.offset = newPos % chain.getChunkCapacity();
+        this.position = newPos;
         return newPos - oldPos;
     }
 
@@ -121,6 +125,7 @@ public class BufferCursor {
         int newPos = Math.max(oldPos - n, head.position());
         this.chunkPos = newPos / chain.getChunkCapacity();
         this.offset = newPos % chain.getChunkCapacity();
+        this.position = newPos;
         return oldPos - newPos;
     }
 
@@ -130,7 +135,7 @@ public class BufferCursor {
      * @return The 0-based index relative to the start of the entire chain.
      */
     public int position() {
-        return chain.getChunkCapacity() * chunkPos + offset;
+        return position;
     }
 
     /**
