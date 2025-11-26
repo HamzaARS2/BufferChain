@@ -2,7 +2,6 @@ package com.helarras.bufferchain;
 
 import java.util.Optional;
 
-
 /**
  * Allows traversal over the BufferChain as if it were a single continuous stream.
  * Handles the logic of jumping between chunks automatically.
@@ -30,7 +29,7 @@ public class BufferCursor {
      */
     public BufferCursor(BufferChain chain, int position) {
         this(chain, position / chain.getChunkCapacity(), position % chain.getChunkCapacity());
-        if (position >= chain.getSize())
+        if (position > chain.getSize())
             throw new IllegalArgumentException("Position " + position + " exceeds buffer chain size " + chain.getSize());
         if (position < 0)
             throw new IllegalArgumentException("Position cannot be negative: " + position);
@@ -53,6 +52,8 @@ public class BufferCursor {
     public byte peek() {
         if (chain.isEmpty())
             throw new RuntimeException("BufferChain is empty");
+        if (position >= chain.getSize())
+            throw new IndexOutOfBoundsException("position " + position + " is larger than or equals chain size");
         return chain.getChunk(chunkPos).orElseThrow().get(offset);
     }
 
@@ -73,6 +74,10 @@ public class BufferCursor {
                 && nextOffset < oChunk.get().getSize();
     }
 
+    public boolean hasCurrent() {
+        return position < chain.getSize();
+    }
+
     /**
      * Advances the cursor to the next available byte in the buffer chain
      *
@@ -80,7 +85,7 @@ public class BufferCursor {
      * false if the end of the buffer chain was already reached.
      */
     public boolean next() {
-        if (!hasNext()) return false;
+        if (!hasCurrent()) return false;
         if (offset + 1 < chain.getChunkCapacity())
             ++offset;
         else {
@@ -136,6 +141,14 @@ public class BufferCursor {
      */
     public int position() {
         return position;
+    }
+
+    public int getChunkPos() {
+        return chunkPos;
+    }
+
+    public int getOffset() {
+        return offset;
     }
 
     /**

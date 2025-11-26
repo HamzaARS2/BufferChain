@@ -3,6 +3,7 @@ package com.helarras.bufferchain;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeEach;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -128,4 +129,26 @@ class BufferChainTest {
             chain.append(new byte[]{1}, 0, 1);
         });
     }
+
+    @Test
+    void readBytes() throws IOException {
+        byte[] data = new byte[100];
+        for (byte i = 0; i < 50; i++)
+            data[i] = i;
+        chain.append(data, 0, 25);
+        chain.append(data, 25, 25);
+        BufferCursor cursor = chain.cursorAt(0);
+
+//        assertEquals(50, chain.getSize());
+        byte []buffer = new byte[50];
+            chain.readBytes(buffer, 0, buffer.length);
+            for (int i = 0; i <= 49; i++)
+                assertEquals(i, chain.readBytes(0, i).length);
+            System.out.println(Arrays.toString(buffer));
+        while (cursor.hasCurrent()) {
+            System.out.println(cursor.peek());
+            cursor.next();
+        }
+    }
+
 }

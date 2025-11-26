@@ -74,7 +74,7 @@ public class BufferChain {
             return Optional.empty();
         BufferCursor cursor = new BufferCursor(this);
         int matched = 0;
-        do {
+        while (cursor.hasCurrent()) {
             byte current = cursor.peek();
             if (current == pattern[matched]) ++matched;
             else {
@@ -82,12 +82,43 @@ public class BufferChain {
                 if (current == pattern[matched])
                     ++matched;
             }
-        } while (matched < pattern.length && cursor.next());
+            if (matched == pattern.length) break;
+            cursor.next();
+        }
         if (matched != pattern.length)
             return Optional.empty();
         cursor.rewind(matched - 1);
         return Optional.of(cursor);
     }
+
+    public byte[] readBytes(int i, int length) {
+        BufferCursor start = this.cursorAt(i);
+        int endPos = i + length;
+        byte[] dst = new byte[length];
+        int dstOffset = 0;
+        while (start.position() < endPos) {
+            BufferChunk current = chunks.get(start.getChunkPos());
+            int len = Math.min(current.getSize() - start.getOffset(), length - dstOffset);
+            current.getBytes(dst, dstOffset, len, start.getOffset());
+            start.advance(len);
+            dstOffset += len;
+        }
+        return dst;
+    }
+
+    public void readBytes(byte[] dst, int i, int length) {
+        BufferCursor start = this.cursorAt(i);
+        int endPos = i + length;
+        int dstOffset = 0;
+        while (start.position() < endPos) {
+            BufferChunk current = chunks.get(start.getChunkPos());
+            int len = Math.min(current.getSize() - start.getOffset(), length - dstOffset);
+            current.getBytes(dst, dstOffset, len, start.getOffset());
+            start.advance(len);
+            dstOffset += len;
+        }
+    }
+
 
     /**
      * Creates a cursor positioned at the very beginning of the chain.
@@ -110,9 +141,7 @@ public class BufferChain {
      * Creates a cursor positioned at the last byte of the chain.
      */
     public BufferCursor tail() {
-        int chunkSize = chunks.get(writeChunk).getSize();
-        int lastBytePos = chunkSize == 0 ? 0 : chunkSize - 1;
-        return new BufferCursor(this, writeChunk, lastBytePos);
+        return new BufferCursor(this, maxChunks, 0); // tail is the cursor pointing after the last byte
     }
 
     /**

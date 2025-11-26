@@ -37,6 +37,16 @@ public class BufferChunk {
         return toCopy;
     }
 
+    public byte[] getBytes(int start, int length) {
+        byte[] bytes = new byte[length];
+        System.arraycopy(chunk, start, bytes, 0, length);
+        return bytes;
+    }
+
+    public void getBytes(byte [] dst, int start, int length, int chunkOffset) {
+        System.arraycopy(chunk, chunkOffset, dst, start, length);
+    }
+
     /**
      * Creates a copy of the underlying byte array.
      *
